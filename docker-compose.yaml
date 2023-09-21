@@ -1,0 +1,62 @@
+version: "3.8"
+name: "docker_java_e6k_septembre_1_0"
+
+services:
+
+  db:
+    container_name: "dbMysql"
+    build: "./db"
+    volumes: 
+      - "./db/backupDb:/var/lib/mysql"
+    env_file: ./.env
+    environment:
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_USER: $MYSQL_USER
+      MYSQL_PASSWORD: $MYSQL_PASSWORD
+      MYSQL_DATABASE: $MYSQL_DATABASE
+    restart: always
+    networks:
+     - db_api
+
+
+  api:
+    container_name: "apiExpress"
+    build: "./api"
+    env_file: ./.env
+    environment:
+        API_MYSQL_PASSWORD: $API_MYSQL_PASSWORD
+        API_MYSQL_USER: $API_MYSQL_USER
+        API_MYSQL_DATABASE: $API_MYSQL_DATABASE
+        API_MYSQL_HOST: $API_MYSQL_HOST
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    restart: on-failure
+    networks:
+     - db_api
+
+
+  front:
+    container_name: "frontAngular"
+    build: "./front"
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+      - api
+    restart: on-failure
+    networks:
+     - front
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "3"
+
+
+networks:
+    db_api:
+    front:
+
+# volumes:
